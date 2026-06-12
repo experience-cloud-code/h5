@@ -302,6 +302,35 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
+    .auth-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 12px;
+      color: var(--muted-strong);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 14px rgba(251, 113, 133, 0.52);
+    }
+
+    .auth-status.signed-in .status-dot {
+      background: #34d399;
+      box-shadow: 0 0 14px rgba(52, 211, 153, 0.52);
+    }
+
+    .login-button,
     .ghost-button,
     .danger-button {
       color: #e5f7ff;
@@ -502,7 +531,7 @@
       .tabs { width: 100%; }
       .tab-button { flex: 1; }
       .workspace-header, #messages, #imageResults { padding: 18px; }
-      .primary-button, .ghost-button, .danger-button { width: 100%; }
+      .primary-button, .login-button, .ghost-button, .danger-button { width: 100%; }
       .message { max-width: 96%; }
     }
   </style>
@@ -544,7 +573,7 @@
               选择 Puter 模型
               <select id="modelSelect"></select>
             </label>
-            <button class="login-button" id="loginButton" type="button">使用 Google 登录</button>
+            <button class="login-button" id="loginButton" type="button">使用 Puter 登录</button>
           </div>
 
           <div class="controls" id="chatControls">
@@ -628,6 +657,9 @@
 
     const tabButtons = document.querySelectorAll('.tab-button');
     const statusText = document.querySelector('#statusText');
+    const authStatus = document.querySelector('#authStatus');
+    const loginButton = document.querySelector('#loginButton');
+    const modelSelect = document.querySelector('#modelSelect');
     const chatControls = document.querySelector('#chatControls');
     const imageControls = document.querySelector('#imageControls');
     const chatPanel = document.querySelector('#chatPanel');
@@ -651,7 +683,12 @@
     let conversation = [];
     let chatHistory = loadStorage(CHAT_STORAGE_KEY, []);
     let imageHistory = loadStorage(IMAGE_STORAGE_KEY, []);
-    let currentChatId = crypto.randomUUID();
+    let currentChatId = createId();
+
+    function createId() {
+      if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+      return `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    }
 
     function loadStorage(key, fallback) {
       try {
@@ -674,6 +711,69 @@
         option.selected = model.id === selectedId;
         select.appendChild(option);
       });
+    }
+
+    function currentModels() {
+      return chatPanel.classList.contains('active') ? chatModels : imageModels;
+    }
+
+    function syncPrimaryModelSelect() {
+      const activeModels = currentModels();
+      const activeSelect = chatPanel.classList.contains('active') ? chatModelSelect : imageModelSelect;
+      populateSelect(modelSelect, activeModels, activeSelect.value || activeModels[0].id);
+    }
+
+    function setAuthState(isSignedIn, label = '') {
+      authStatus.classList.toggle('signed-in', isSignedIn);
+      authStatus.querySelector('span:last-child').textContent = isSignedIn ? (label || '已登录') : (label || '未登录');
+      loginButton.textContent = isSignedIn ? '退出登录' : '使用 Puter 登录';
+    }
+
+    async function refreshAuthState() {
+      if (!window.puter?.auth) {
+        setAuthState(false, 'Puter SDK 未加载');
+        loginButton.disabled = true;
+        return;
+      }
+
+      loginButton.disabled = false;
+
+      try {
+        const isSignedIn = await withTimeout(
+          window.puter.auth.isSignedIn(),
+          5000,
+          'Puter 认证状态检查超时'
+        );
+        if (!isSignedIn) {
+          setAuthState(false);
+          return;
+        }
+
+        const user = await puter.auth.getUser().catch(() => null);
+        setAuthState(true, user?.username || user?.email || '已登录');
+      } catch {
+        setAuthState(false, '认证状态未知');
+      }
+    }
+
+    function initializeAuth() {
+      const startedAt = Date.now();
+      const waitForSdk = () => {
+        if (window.puter?.auth) {
+          refreshAuthState();
+          return;
+        }
+
+        if (Date.now() - startedAt > 5000) {
+          setAuthState(false, 'Puter SDK 未加载');
+          loginButton.disabled = true;
+          return;
+        }
+
+        window.setTimeout(waitForSdk, 200);
+      };
+
+      waitForSdk();
     }
 
     function appendMessage(role, text = '') {
@@ -766,7 +866,7 @@
 
     function newConversation() {
       saveCurrentConversation();
-      currentChatId = crypto.randomUUID();
+      currentChatId = createId();
       conversation = [];
       renderConversation();
       input.focus();
@@ -778,6 +878,15 @@
         .map((item) => ({ role: item.role, content: item.content }));
     }
 
+    function withTimeout(promise, timeoutMs, message) {
+      let timeoutId;
+      const timeout = new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+      });
+
+      return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+    }
+
     async function askModel(question) {
       conversation.push({ role: 'user', content: question });
       appendMessage('user', question);
@@ -787,10 +896,14 @@
       setLoading(true);
 
       try {
-        const stream = await puter.ai.chat(normalizeChatMessages(), {
+        if (!window.puter?.ai?.chat) {
+          throw new Error('Puter SDK 未加载完成，请刷新页面或检查网络后重试。');
+        }
+
+        const stream = await withTimeout(window.puter.ai.chat(normalizeChatMessages(), {
           model: chatModelSelect.value,
           stream: true
-        });
+        }), 30000, 'Puter 对话接口响应超时，请重新登录或稍后重试。');
 
         for await (const part of stream) {
           const text = part?.text || '';
@@ -804,14 +917,7 @@
           answer.textContent = assistantMessage.content;
         }
 
-        saveHistoryItem({
-          id: crypto.randomUUID(),
-          model,
-          modelName,
-          question,
-          answer: answer.textContent,
-          createdAt: new Date().toISOString()
-        });
+        saveCurrentConversation();
       } catch (error) {
         assistantMessage.content = `调用失败：${error?.message || '请检查 Puter 授权和网络连接后重试。'}`;
         answer.classList.add('error');
@@ -886,10 +992,18 @@
       setImageLoading(true);
 
       try {
-        const result = await puter.ai.txt2img(prompt, { model: imageModelSelect.value });
+        if (!window.puter?.ai?.txt2img) {
+          throw new Error('Puter SDK 未加载完成，请刷新页面或检查网络后重试。');
+        }
+
+        const result = await withTimeout(
+          window.puter.ai.txt2img(prompt, { model: imageModelSelect.value }),
+          60000,
+          'Puter 生图接口响应超时，请重新登录或稍后重试。'
+        );
         const url = resultToImageUrl(result);
         const record = {
-          id: crypto.randomUUID(),
+          id: createId(),
           prompt,
           model: imageModelSelect.value,
           url,
@@ -907,7 +1021,7 @@
       } catch (error) {
         pending.remove();
         const record = {
-          id: crypto.randomUUID(),
+          id: createId(),
           prompt,
           model: imageModelSelect.value,
           url: '',
@@ -936,8 +1050,48 @@
         chatControls.hidden = activeTab !== 'chat';
         imageControls.hidden = activeTab !== 'image';
         statusText.textContent = activeTab === 'chat' ? '默认 Grok，已开启上下文对话' : '选择模型，把提示词生成图片';
+        syncPrimaryModelSelect();
         (activeTab === 'chat' ? input : imagePrompt).focus();
       });
+    });
+
+    modelSelect.addEventListener('change', () => {
+      if (chatPanel.classList.contains('active')) {
+        chatModelSelect.value = modelSelect.value;
+      } else {
+        imageModelSelect.value = modelSelect.value;
+      }
+    });
+
+    chatModelSelect.addEventListener('change', syncPrimaryModelSelect);
+    imageModelSelect.addEventListener('change', syncPrimaryModelSelect);
+
+    loginButton.addEventListener('click', async () => {
+      if (!window.puter?.auth) {
+        setAuthState(false, 'Puter SDK 未加载');
+        loginButton.disabled = true;
+        return;
+      }
+      loginButton.disabled = true;
+
+      try {
+        const isSignedIn = await withTimeout(
+          window.puter.auth.isSignedIn(),
+          5000,
+          'Puter 认证状态检查超时'
+        );
+        if (isSignedIn) {
+          await withTimeout(window.puter.auth.signOut(), 10000, '退出登录超时');
+          setAuthState(false);
+        } else {
+          await withTimeout(window.puter.auth.signIn(), 30000, '登录超时，请检查弹窗或稍后重试。');
+          await refreshAuthState();
+        }
+      } catch (error) {
+        setAuthState(false, error?.message || '登录失败');
+      } finally {
+        loginButton.disabled = false;
+      }
     });
 
     form.addEventListener('submit', (event) => {
@@ -975,7 +1129,7 @@
     clearHistoryButton.addEventListener('click', () => {
       chatHistory = [];
       conversation = [];
-      currentChatId = crypto.randomUUID();
+      currentChatId = createId();
       saveStorage(CHAT_STORAGE_KEY, chatHistory);
       renderConversation();
       renderHistory();
@@ -991,9 +1145,11 @@
 
     populateSelect(chatModelSelect, chatModels, DEFAULT_CHAT_MODEL);
     populateSelect(imageModelSelect, imageModels, imageModels[0].id);
+    syncPrimaryModelSelect();
     renderConversation();
     renderHistory();
     renderImages();
+    initializeAuth();
   </script>
 </body>
 </html>
