@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Puter 多模型智能问答</title>
+  <title>Puter AI 创作工作台</title>
   <script src="https://js.puter.com/v2/"></script>
   <style>
     :root {
@@ -16,7 +16,6 @@
       --muted-strong: #c9d8e8;
       --accent: #7c3aed;
       --accent-2: #20d3ee;
-      --success: #34d399;
       --danger: #fb7185;
       --border: rgba(255, 255, 255, 0.12);
       --shadow: 0 28px 90px rgba(0, 0, 0, 0.46);
@@ -57,7 +56,7 @@
     select { cursor: pointer; }
 
     .shell {
-      width: min(1280px, calc(100% - 32px));
+      width: min(1240px, calc(100% - 32px));
       min-height: 100vh;
       margin: 0 auto;
       display: grid;
@@ -69,14 +68,13 @@
     .hero {
       width: 100%;
       display: grid;
-      grid-template-columns: minmax(300px, 0.86fr) minmax(390px, 1.14fr);
-      gap: 24px;
+      grid-template-columns: minmax(0, 0.86fr) minmax(430px, 1.14fr);
+      gap: 28px;
       align-items: stretch;
     }
 
     .intro,
-    .history-card,
-    .chat-panel {
+    .workspace {
       border: 1px solid var(--border);
       background: linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
       box-shadow: var(--shadow);
@@ -131,10 +129,10 @@
     }
 
     h1 {
-      margin: 24px 0 16px;
+      margin: 26px 0 18px;
       max-width: 11ch;
-      font-size: clamp(40px, 6vw, 70px);
-      line-height: 0.98;
+      font-size: clamp(44px, 7vw, 78px);
+      line-height: 0.96;
       letter-spacing: -0.07em;
     }
 
@@ -182,101 +180,7 @@
       color: #80f1ff;
     }
 
-    .history-card {
-      padding: 20px;
-      background: rgba(10, 20, 38, 0.62);
-      min-height: 220px;
-    }
-
-    .history-header,
-    .panel-actions,
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .history-header h2 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .ghost-button,
-    .danger-button,
-    .login-button {
-      min-height: 40px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 0 14px;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: none;
-      transition: transform 0.18s, background 0.18s, border-color 0.18s, opacity 0.18s;
-    }
-
-    .ghost-button:hover:not(:disabled),
-    .danger-button:hover:not(:disabled),
-    .login-button:hover:not(:disabled) {
-      transform: translateY(-1px);
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.22);
-    }
-
-    .danger-button { color: #fecdd3; }
-
-    .history-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 16px;
-      max-height: 305px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .history-empty {
-      margin: 18px 0 0;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .history-item {
-      width: 100%;
-      display: grid;
-      gap: 5px;
-      text-align: left;
-      color: var(--muted-strong);
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 12px 13px;
-      box-shadow: none;
-      transition: transform 0.18s, background 0.18s, border-color 0.18s;
-    }
-
-    .history-item:hover {
-      transform: translateY(-1px);
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(32, 211, 238, 0.32);
-    }
-
-    .history-question {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: var(--text);
-      font-weight: 700;
-    }
-
-    .history-meta {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .chat-panel {
+    .workspace {
       min-height: 760px;
       display: flex;
       flex-direction: column;
@@ -284,7 +188,7 @@
       background: var(--card);
     }
 
-    .chat-header {
+    .workspace-header {
       display: grid;
       gap: 18px;
       padding: 22px 24px;
@@ -292,7 +196,12 @@
       background: rgba(255, 255, 255, 0.045);
     }
 
-    .toolbar { align-items: flex-start; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
 
     .bot-id {
       display: flex;
@@ -312,76 +221,111 @@
       font-weight: 900;
     }
 
-    .bot-id strong { display: block; font-size: 17px; }
-    .bot-id span, .model-pill, .auth-status { color: var(--muted); font-size: 13px; }
+    .bot-id strong { display: block; font-size: 16px; }
+    .bot-id span, .field label, .history-meta { color: var(--muted); font-size: 13px; }
 
-    .auth-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
+    .tabs {
+      display: flex;
+      gap: 10px;
+      padding: 5px;
       border: 1px solid var(--border);
-      border-radius: 999px;
+      border-radius: 18px;
       background: rgba(255, 255, 255, 0.06);
-      white-space: nowrap;
     }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--danger);
-      box-shadow: 0 0 12px rgba(251, 113, 133, 0.75);
+    .tab-button,
+    .ghost-button,
+    .danger-button {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      padding: 0 15px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.18s, filter 0.18s, opacity 0.18s, background 0.18s;
     }
 
-    .auth-status.signed .status-dot {
-      background: var(--success);
-      box-shadow: 0 0 12px rgba(52, 211, 153, 0.75);
+    .tab-button {
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .tab-button.active {
+      color: #04111f;
+      background: linear-gradient(135deg, #8ff5ff, #c4b5fd);
+      box-shadow: 0 12px 24px rgba(32, 211, 238, 0.16);
     }
 
     .controls {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: 1fr auto;
       gap: 12px;
       align-items: end;
     }
 
-    label {
+    .field {
       display: grid;
-      gap: 7px;
-      color: var(--muted-strong);
-      font-size: 13px;
-      font-weight: 700;
+      gap: 8px;
     }
 
-    select {
+    select,
+    textarea,
+    input {
       width: 100%;
-      min-height: 48px;
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 0 14px;
       color: var(--text);
-      background: rgba(3, 9, 20, 0.66);
+      background: rgba(255, 255, 255, 0.07);
       outline: none;
+      font: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    select { min-height: 48px; padding: 0 14px; }
+    select option { color: #0f172a; background: #f8fafc; }
+
+    textarea {
+      min-height: 58px;
+      max-height: 180px;
+      resize: vertical;
+      border-radius: 20px;
+      padding: 17px 18px;
+      line-height: 1.5;
     }
 
     select:focus,
-    textarea:focus {
+    textarea:focus,
+    input:focus {
       border-color: rgba(32, 211, 238, 0.72);
       box-shadow: 0 0 0 4px rgba(32, 211, 238, 0.11);
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    .login-button {
-      color: #06111f;
-      background: linear-gradient(135deg, #ffffff, #b7f4ff 58%, #d9ccff);
-      font-weight: 900;
-      border: 0;
-      min-height: 48px;
+    .ghost-button,
+    .danger-button {
+      color: #e5f7ff;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border);
       white-space: nowrap;
     }
 
-    #messages {
+    .danger-button { color: #fecdd3; }
+
+    button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
+    button:disabled { cursor: not-allowed; opacity: 0.58; }
+
+    .panel {
       flex: 1;
+      min-height: 0;
+      display: none;
+      grid-template-rows: minmax(0, 1fr) auto auto;
+    }
+
+    .panel.active { display: grid; }
+
+    #messages,
+    #imageResults {
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -408,7 +352,8 @@
       border-bottom-right-radius: 7px;
     }
 
-    .message.assistant {
+    .message.assistant,
+    .image-card {
       align-self: flex-start;
       background: var(--card-strong);
       border: 1px solid var(--border);
@@ -430,6 +375,37 @@
       border-color: rgba(248, 113, 113, 0.35);
     }
 
+    .image-card {
+      width: min(100%, 620px);
+      padding: 14px;
+      border-radius: 24px;
+      animation: rise 0.22s ease-out;
+    }
+
+    .image-card p {
+      margin: 0 0 12px;
+      color: #d8e8f8;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .image-card img {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .image-card a {
+      display: inline-flex;
+      margin-top: 12px;
+      color: #a5f3fc;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
     .composer {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -439,24 +415,7 @@
       background: rgba(4, 9, 19, 0.44);
     }
 
-    textarea {
-      width: 100%;
-      min-height: 62px;
-      max-height: 190px;
-      resize: vertical;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 17px 18px;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.07);
-      outline: none;
-      line-height: 1.5;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    }
-
-    textarea:focus { background: rgba(255, 255, 255, 0.1); }
-
-    .send-button {
+    .primary-button {
       align-self: end;
       min-height: 62px;
       border: 0;
@@ -470,9 +429,6 @@
       transition: transform 0.18s, filter 0.18s, opacity 0.18s;
     }
 
-    .send-button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
-    button:disabled, select:disabled, textarea:disabled { cursor: not-allowed; opacity: 0.58; }
-
     .hint {
       grid-column: 1 / -1;
       margin: -4px 2px 0;
@@ -481,69 +437,104 @@
       line-height: 1.6;
     }
 
+    .history-drawer {
+      border-top: 1px solid var(--border);
+      padding: 14px 18px 18px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .history-head strong { font-size: 14px; }
+
+    .history-list {
+      display: grid;
+      gap: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: grid;
+      gap: 4px;
+      width: 100%;
+      padding: 10px 12px;
+      color: #e5f7ff;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+    }
+
+    .history-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
     @keyframes rise {
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 960px) {
       .shell { padding: 24px 0; }
       .hero { grid-template-columns: 1fr; }
       .intro { padding: 30px; }
       h1 { max-width: none; }
-      .chat-panel { min-height: 690px; }
+      .workspace { min-height: 720px; }
     }
 
     @media (max-width: 620px) {
-      .shell { width: min(100% - 20px, 1280px); }
-      .intro, .history-card, .chat-panel { border-radius: 24px; }
-      .chat-header, #messages { padding: 18px; }
-      .toolbar, .history-header { align-items: flex-start; flex-direction: column; }
-      .panel-actions { width: 100%; }
-      .panel-actions button { flex: 1; }
-      .controls, .composer { grid-template-columns: 1fr; }
-      .login-button, .send-button { width: 100%; }
+      .shell { width: min(100% - 20px, 1120px); }
+      .intro, .workspace { border-radius: 24px; }
+      .topbar, .controls, .composer { grid-template-columns: 1fr; }
+      .topbar { align-items: stretch; flex-direction: column; }
+      .tabs { width: 100%; }
+      .tab-button { flex: 1; }
+      .workspace-header, #messages, #imageResults { padding: 18px; }
+      .primary-button, .ghost-button, .danger-button { width: 100%; }
       .message { max-width: 96%; }
     }
   </style>
 </head>
 <body>
   <main class="shell">
-    <section class="hero" aria-label="Puter 多模型智能问答应用">
-      <div class="left-stack">
-        <div class="intro">
-          <div class="badge"><span class="badge-dot"></span> Powered by Puter · Google 登录 · 多模型</div>
-          <h1><span class="gradient-text">多模型</span> 智能问答</h1>
-          <p>默认使用 Grok，你也可以切换到 GPT、Claude、Gemini、DeepSeek、Qwen、Mistral、Llama 等常用 Puter 模型。登录后即可在浏览器里直接发起流式对话。</p>
-          <ul class="feature-list">
-            <li><span class="check">✓</span> 默认 Grok，支持大部分主流 Puter 聊天模型</li>
-            <li><span class="check">✓</span> 通过 Puter 弹窗完成 Google / Puter 授权登录</li>
-            <li><span class="check">✓</span> 自动保存本地历史记录，并可一键清除</li>
-          </ul>
-        </div>
-
-        <aside class="history-card" aria-label="历史记录">
-          <div class="history-header">
-            <h2>历史记录</h2>
-            <div class="panel-actions">
-              <button class="ghost-button" id="newChatButton" type="button">新对话</button>
-              <button class="danger-button" id="clearHistoryButton" type="button">清除历史</button>
-            </div>
-          </div>
-          <div class="history-list" id="historyList"></div>
-          <p class="history-empty" id="historyEmpty">还没有历史记录。发送问题后，会自动保存在这个浏览器中。</p>
-        </aside>
+    <section class="hero" aria-label="Puter AI 创作工作台">
+      <div class="intro">
+        <div class="badge"><span class="badge-dot"></span> Powered by Puter · Chat + Image</div>
+        <h1><span class="gradient-text">你的灵感</span> AI 工作台</h1>
+        <p>选择常用 Puter 模型进行连续对话，默认使用 Grok；也可以切换到生图模式，用支持的 Puter 图像模型把提示词变成图片。</p>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> 多模型问答：Grok、GPT、Claude、Gemini 等常用模型</li>
+          <li><span class="check">✓</span> 连续对话自动携带上下文，并保存本地历史记录</li>
+          <li><span class="check">✓</span> 支持清空历史、回车发送、Shift + Enter 换行</li>
+          <li><span class="check">✓</span> 新增文生图，可选择 Puter 图片模型生成作品</li>
+        </ul>
       </div>
 
-      <div class="chat-panel">
-        <header class="chat-header">
-          <div class="toolbar">
+      <div class="workspace">
+        <header class="workspace-header">
+          <div class="topbar">
             <div class="bot-id">
               <div class="avatar" aria-hidden="true">AI</div>
               <div>
-                <strong>智能助手</strong>
-                <span id="assistantSubtitle">默认模型：Grok 4 Fast</span>
+                <strong>Puter AI 助手</strong>
+                <span id="statusText">默认 Grok，已开启上下文对话</span>
               </div>
+            </div>
+            <div class="tabs" role="tablist" aria-label="功能切换">
+              <button class="tab-button active" type="button" data-tab="chat" role="tab" aria-selected="true">连续对话</button>
+              <button class="tab-button" type="button" data-tab="image" role="tab" aria-selected="false">AI 生图</button>
             </div>
             <div class="auth-status" id="authStatus"><span class="status-dot"></span><span>未登录</span></div>
           </div>
@@ -555,101 +546,134 @@
             </label>
             <button class="login-button" id="loginButton" type="button">使用 Google 登录</button>
           </div>
+
+          <div class="controls" id="chatControls">
+            <div class="field">
+              <label for="chatModel">对话模型</label>
+              <select id="chatModel" aria-label="选择对话模型"></select>
+            </div>
+            <button class="ghost-button" id="newChatButton" type="button">新建对话</button>
+          </div>
+
+          <div class="controls" id="imageControls" hidden>
+            <div class="field">
+              <label for="imageModel">生图模型</label>
+              <select id="imageModel" aria-label="选择生图模型"></select>
+            </div>
+            <button class="ghost-button" id="clearImagesButton" type="button">清空图片</button>
+          </div>
         </header>
 
-        <div id="messages" aria-live="polite">
-          <div class="message assistant">你好！请先点击“使用 Google 登录”完成 Puter 授权，然后输入问题。默认会用 Grok 回答，你也可以在上方切换模型。</div>
-        </div>
+        <section class="panel active" id="chatPanel" aria-label="连续对话面板">
+          <div id="messages" aria-live="polite"></div>
 
-        <form class="composer" id="chatForm">
-          <textarea id="question" placeholder="例如：用 3 个要点解释量子纠缠，并给一个生活类比" autocomplete="off" required></textarea>
-          <button class="send-button" id="sendButton" type="submit">发送问题</button>
-          <p class="hint">提示：登录由 Puter.js 处理；若浏览器拦截弹窗，请允许本站弹窗。历史记录保存在本地 localStorage，不会自动同步到云端。</p>
-        </form>
+          <form class="composer" id="chatForm">
+            <textarea id="question" placeholder="例如：帮我用简单的话解释量子纠缠" autocomplete="off" required></textarea>
+            <button class="primary-button" id="sendButton" type="submit">发送问题</button>
+            <p class="hint">提示：会把当前对话上下文一起发给模型；首次调用可能需要登录或授权 Puter。</p>
+          </form>
+
+          <aside class="history-drawer" aria-label="对话历史记录">
+            <div class="history-head">
+              <div>
+                <strong>历史记录</strong>
+                <div class="history-meta" id="historyMeta">自动保存最近对话</div>
+              </div>
+              <button class="danger-button" id="clearHistoryButton" type="button">清空历史</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+          </aside>
+        </section>
+
+        <section class="panel" id="imagePanel" aria-label="AI 生图面板">
+          <div id="imageResults" aria-live="polite"></div>
+
+          <form class="composer" id="imageForm">
+            <textarea id="imagePrompt" placeholder="例如：赛博朋克城市中的白色机械猫，霓虹灯，电影感构图" autocomplete="off" required></textarea>
+            <button class="primary-button" id="imageButton" type="submit">生成图片</button>
+            <p class="hint">提示：不同 Puter 图片模型的可用性可能与账号、地区或平台配置有关；失败时可切换模型重试。</p>
+          </form>
+        </section>
       </div>
     </section>
   </main>
 
   <script>
-    const DEFAULT_MODEL = 'x-ai/grok-4-fast';
-    const HISTORY_KEY = 'puter-multi-model-chat-history-v1';
-    const MODEL_OPTIONS = [
-      { group: 'xAI / Grok', id: 'x-ai/grok-4-fast', name: 'Grok 4 Fast（默认）' },
-      { group: 'xAI / Grok', id: 'x-ai/grok-4-fast-non-reasoning', name: 'Grok 4 Fast Non-Reasoning' },
-      { group: 'xAI / Grok', id: 'x-ai/grok-4-20-reasoning', name: 'Grok 4.20 Reasoning' },
-      { group: 'xAI / Grok', id: 'x-ai/grok-4-20-non-reasoning', name: 'Grok 4.20 Non-Reasoning' },
-      { group: 'xAI / Grok', id: 'x-ai/grok-4.20-beta', name: 'Grok 4.20 Beta' },
-      { group: 'xAI / Grok', id: 'x-ai/grok-4', name: 'Grok 4' },
-      { group: 'OpenAI', id: 'openai/gpt-5.4', name: 'GPT-5.4' },
-      { group: 'OpenAI', id: 'openai/gpt-5.4-pro', name: 'GPT-5.4 Pro' },
-      { group: 'OpenAI', id: 'openai/gpt-5.3-chat', name: 'GPT-5.3 Chat' },
-      { group: 'OpenAI', id: 'openai/gpt-5.2', name: 'GPT-5.2' },
-      { group: 'OpenAI', id: 'openai/gpt-5.2-chat', name: 'GPT-5.2 Chat' },
-      { group: 'OpenAI', id: 'openai/gpt-5.1', name: 'GPT-5.1' },
-      { group: 'OpenAI', id: 'openai/gpt-5', name: 'GPT-5' },
-      { group: 'OpenAI', id: 'openai/gpt-4.1-mini', name: 'GPT-4.1 Mini' },
-      { group: 'Anthropic / Claude', id: 'anthropic/claude-opus-4-8', name: 'Claude Opus 4.8' },
-      { group: 'Anthropic / Claude', id: 'anthropic/claude-opus-4.8-fast', name: 'Claude Opus 4.8 Fast' },
-      { group: 'Anthropic / Claude', id: 'anthropic/claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },
-      { group: 'Google / Gemini', id: 'google/gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro' },
-      { group: 'Google / Gemini', id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
-      { group: 'Google / Gemini', id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
-      { group: 'Google / Gemini', id: 'google/gemini-2.5-flash-lite-preview-09-2025', name: 'Gemini 2.5 Flash-Lite' },
-      { group: 'DeepSeek', id: 'deepseek/deepseek-v4-pro', name: 'DeepSeek V4 Pro' },
-      { group: 'DeepSeek', id: 'deepseek/deepseek-v4-flash', name: 'DeepSeek V4 Flash' },
-      { group: 'DeepSeek', id: 'deepseek/deepseek-v3.2-exp', name: 'DeepSeek V3.2 Exp' },
-      { group: 'DeepSeek', id: 'deepseek/deepseek-v3.1-terminus', name: 'DeepSeek V3.1 Terminus' },
-      { group: 'Qwen', id: 'qwen/qwen3.7-max', name: 'Qwen3.7 Max' },
-      { group: 'Qwen', id: 'qwen/qwen3-max', name: 'Qwen3 Max' },
-      { group: 'Qwen', id: 'qwen/qwen3.5-flash-02-23', name: 'Qwen3.5 Flash' },
-      { group: 'Qwen', id: 'qwen/qwq-32b', name: 'QwQ 32B' },
-      { group: 'Qwen', id: 'qwen/qwen3-vl-plus', name: 'Qwen3 VL Plus' },
-      { group: 'Mistral AI', id: 'mistralai/mistral-large-2512', name: 'Mistral Large 3' },
-      { group: 'Mistral AI', id: 'mistralai/mistral-small-3.2-24b-instruct', name: 'Mistral Small 3.2' },
-      { group: 'Mistral AI', id: 'mistralai/mixtral-8x22b-instruct', name: 'Mixtral 8x22B' },
-      { group: 'Meta Llama', id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B Instruct' },
-      { group: 'Meta Llama', id: 'meta-llama/llama-3.1-70b-instruct', name: 'Llama 3.1 70B Instruct' }
+    const DEFAULT_CHAT_MODEL = 'grok-4-fast';
+    const CHAT_STORAGE_KEY = 'puter-ai-chat-history-v2';
+    const IMAGE_STORAGE_KEY = 'puter-ai-image-history-v1';
+
+    const chatModels = [
+      { id: 'grok-4-fast', name: 'Grok 4 Fast（默认）' },
+      { id: 'gpt-4.1', name: 'GPT-4.1' },
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' },
+      { id: 'gpt-4o', name: 'GPT-4o' },
+      { id: 'o3', name: 'OpenAI o3' },
+      { id: 'claude-sonnet-4', name: 'Claude Sonnet 4' },
+      { id: 'claude-3-7-sonnet', name: 'Claude 3.7 Sonnet' },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+      { id: 'deepseek-chat', name: 'DeepSeek Chat' },
+      { id: 'mistral-large-latest', name: 'Mistral Large' },
+      { id: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', name: 'Llama 3.1 70B' }
     ];
+
+    const imageModels = [
+      { id: 'gpt-image-1', name: 'GPT Image 1' },
+      { id: 'dall-e-3', name: 'DALL·E 3' },
+      { id: 'flux-pro', name: 'Flux Pro' },
+      { id: 'flux-schnell', name: 'Flux Schnell' },
+      { id: 'stable-diffusion-3.5-large', name: 'Stable Diffusion 3.5 Large' }
+    ];
+
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const statusText = document.querySelector('#statusText');
+    const chatControls = document.querySelector('#chatControls');
+    const imageControls = document.querySelector('#imageControls');
+    const chatPanel = document.querySelector('#chatPanel');
+    const imagePanel = document.querySelector('#imagePanel');
     const form = document.querySelector('#chatForm');
     const input = document.querySelector('#question');
     const messages = document.querySelector('#messages');
     const sendButton = document.querySelector('#sendButton');
-    const modelSelect = document.querySelector('#modelSelect');
-    const loginButton = document.querySelector('#loginButton');
-    const authStatus = document.querySelector('#authStatus');
-    const assistantSubtitle = document.querySelector('#assistantSubtitle');
-    const historyList = document.querySelector('#historyList');
-    const historyEmpty = document.querySelector('#historyEmpty');
-    const clearHistoryButton = document.querySelector('#clearHistoryButton');
+    const chatModelSelect = document.querySelector('#chatModel');
     const newChatButton = document.querySelector('#newChatButton');
+    const historyList = document.querySelector('#historyList');
+    const historyMeta = document.querySelector('#historyMeta');
+    const clearHistoryButton = document.querySelector('#clearHistoryButton');
+    const imageForm = document.querySelector('#imageForm');
+    const imagePrompt = document.querySelector('#imagePrompt');
+    const imageButton = document.querySelector('#imageButton');
+    const imageModelSelect = document.querySelector('#imageModel');
+    const imageResults = document.querySelector('#imageResults');
+    const clearImagesButton = document.querySelector('#clearImagesButton');
 
-    function populateModelSelect() {
-      const groups = new Map();
+    let conversation = [];
+    let chatHistory = loadStorage(CHAT_STORAGE_KEY, []);
+    let imageHistory = loadStorage(IMAGE_STORAGE_KEY, []);
+    let currentChatId = crypto.randomUUID();
 
-      MODEL_OPTIONS.forEach((model) => {
-        if (!groups.has(model.group)) {
-          const group = document.createElement('optgroup');
-          group.label = model.group;
-          groups.set(model.group, group);
-          modelSelect.appendChild(group);
-        }
+    function loadStorage(key, fallback) {
+      try {
+        return JSON.parse(localStorage.getItem(key)) || fallback;
+      } catch {
+        return fallback;
+      }
+    }
 
+    function saveStorage(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function populateSelect(select, models, selectedId) {
+      select.innerHTML = '';
+      models.forEach((model) => {
         const option = document.createElement('option');
         option.value = model.id;
-        option.textContent = `${model.name} · ${model.id}`;
-        groups.get(model.group).appendChild(option);
+        option.textContent = model.name;
+        option.selected = model.id === selectedId;
+        select.appendChild(option);
       });
-
-      modelSelect.value = DEFAULT_MODEL;
-      updateModelLabel();
-    }
-
-    function getModelName(modelId) {
-      return MODEL_OPTIONS.find((model) => model.id === modelId)?.name || modelId;
-    }
-
-    function updateModelLabel() {
-      assistantSubtitle.textContent = `当前模型：${getModelName(modelSelect.value)}`;
     }
 
     function appendMessage(role, text = '') {
@@ -661,121 +685,123 @@
       return message;
     }
 
-    function resetMessages() {
+    function renderConversation() {
       messages.innerHTML = '';
-      appendMessage('assistant', '新对话已准备好。选择模型并输入问题，我会用所选 Puter 模型回答。');
+      if (!conversation.length) {
+        appendMessage('assistant', '你好！请选择模型后开始提问。我会保留当前会话上下文，方便你连续追问。');
+        return;
+      }
+
+      conversation.forEach((item) => appendMessage(item.role, item.content));
     }
 
     function setLoading(isLoading) {
       sendButton.disabled = isLoading;
       input.disabled = isLoading;
-      modelSelect.disabled = isLoading;
-      loginButton.disabled = isLoading;
+      chatModelSelect.disabled = isLoading;
+      newChatButton.disabled = isLoading;
       sendButton.textContent = isLoading ? '思考中…' : '发送问题';
     }
 
-    function readHistory() {
-      try {
-        return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      } catch {
-        return [];
-      }
+    function setImageLoading(isLoading) {
+      imageButton.disabled = isLoading;
+      imagePrompt.disabled = isLoading;
+      imageModelSelect.disabled = isLoading;
+      clearImagesButton.disabled = isLoading;
+      imageButton.textContent = isLoading ? '生成中…' : '生成图片';
     }
 
-    function writeHistory(history) {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
-    }
+    function saveCurrentConversation() {
+      const meaningfulMessages = conversation.filter((item) => item.role !== 'assistant' || item.content.trim());
+      if (!meaningfulMessages.length) return;
 
-    function saveHistoryItem(item) {
-      const history = readHistory();
-      history.unshift(item);
-      writeHistory(history);
+      const firstUser = meaningfulMessages.find((item) => item.role === 'user');
+      const title = firstUser?.content?.slice(0, 42) || '未命名对话';
+      const record = {
+        id: currentChatId,
+        title,
+        model: chatModelSelect.value,
+        messages: meaningfulMessages,
+        updatedAt: new Date().toISOString()
+      };
+
+      chatHistory = [record, ...chatHistory.filter((item) => item.id !== currentChatId)].slice(0, 20);
+      saveStorage(CHAT_STORAGE_KEY, chatHistory);
       renderHistory();
     }
 
     function renderHistory() {
-      const history = readHistory();
       historyList.innerHTML = '';
-      historyEmpty.hidden = history.length > 0;
+      historyMeta.textContent = chatHistory.length ? `已保存 ${chatHistory.length} 条对话` : '暂无历史记录';
 
-      history.forEach((item) => {
+      if (!chatHistory.length) {
+        const empty = document.createElement('div');
+        empty.className = 'history-meta';
+        empty.textContent = '开始聊天后会自动保存到这里。';
+        historyList.appendChild(empty);
+        return;
+      }
+
+      chatHistory.forEach((record) => {
         const button = document.createElement('button');
-        button.type = 'button';
         button.className = 'history-item';
-        button.innerHTML = `
-          <span class="history-question"></span>
-          <span class="history-meta"><span></span><span></span></span>
-        `;
-        button.querySelector('.history-question').textContent = item.question;
-        const meta = button.querySelectorAll('.history-meta span');
-        meta[0].textContent = getModelName(item.model);
-        meta[1].textContent = new Date(item.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        button.addEventListener('click', () => restoreHistoryItem(item));
+        button.type = 'button';
+        button.innerHTML = `<span class="history-title"></span><span class="history-meta"></span>`;
+        button.querySelector('.history-title').textContent = record.title;
+        button.querySelector('.history-meta').textContent = `${record.model} · ${new Date(record.updatedAt).toLocaleString('zh-CN')}`;
+        button.addEventListener('click', () => loadHistory(record.id));
         historyList.appendChild(button);
       });
     }
 
-    function restoreHistoryItem(item) {
-      messages.innerHTML = '';
-      modelSelect.value = item.model;
-      updateModelLabel();
-      appendMessage('user', item.question);
-      appendMessage(item.error ? 'assistant error' : 'assistant', item.answer || '这条记录没有保存到回答内容。');
-      messages.scrollTop = messages.scrollHeight;
+    function loadHistory(id) {
+      const record = chatHistory.find((item) => item.id === id);
+      if (!record) return;
+      currentChatId = record.id;
+      conversation = record.messages.map((item) => ({ role: item.role, content: item.content }));
+      if (record.model) chatModelSelect.value = record.model;
+      renderConversation();
+      input.focus();
     }
 
-    async function refreshAuthStatus() {
-      const signedIn = puter.auth.isSignedIn();
-      authStatus.classList.toggle('signed', signedIn);
-
-      if (!signedIn) {
-        authStatus.lastElementChild.textContent = '未登录';
-        loginButton.textContent = '使用 Google 登录';
-        return false;
-      }
-
-      try {
-        const user = await puter.auth.getUser();
-        authStatus.lastElementChild.textContent = user?.username ? `已登录：${user.username}` : '已登录';
-      } catch {
-        authStatus.lastElementChild.textContent = '已登录';
-      }
-
-      loginButton.textContent = '已登录';
-      return true;
+    function newConversation() {
+      saveCurrentConversation();
+      currentChatId = crypto.randomUUID();
+      conversation = [];
+      renderConversation();
+      input.focus();
     }
 
-    async function ensureSignedIn() {
-      if (puter.auth.isSignedIn()) {
-        await refreshAuthStatus();
-        return true;
-      }
-
-      appendMessage('system', '正在打开 Puter 登录窗口，请选择 Google 或你的 Puter 账号完成授权。');
-      await puter.auth.signIn();
-      return refreshAuthStatus();
+    function normalizeChatMessages() {
+      return conversation
+        .filter((item) => item.content.trim())
+        .map((item) => ({ role: item.role, content: item.content }));
     }
 
     async function askModel(question) {
-      const model = modelSelect.value || DEFAULT_MODEL;
-      const modelName = getModelName(model);
+      conversation.push({ role: 'user', content: question });
       appendMessage('user', question);
+      const assistantMessage = { role: 'assistant', content: '' };
+      conversation.push(assistantMessage);
       const answer = appendMessage('assistant', '');
       setLoading(true);
 
       try {
-        const signedIn = await ensureSignedIn();
-        if (!signedIn) throw new Error('尚未完成登录授权。');
-
-        const stream = await puter.ai.chat(question, { model, stream: true });
+        const stream = await puter.ai.chat(normalizeChatMessages(), {
+          model: chatModelSelect.value,
+          stream: true
+        });
 
         for await (const part of stream) {
-          answer.textContent += part?.text || '';
+          const text = part?.text || '';
+          assistantMessage.content += text;
+          answer.textContent = assistantMessage.content;
           messages.scrollTop = messages.scrollHeight;
         }
 
-        if (!answer.textContent.trim()) {
-          answer.textContent = '模型没有返回内容，请换个问题或模型再试一次。';
+        if (!assistantMessage.content.trim()) {
+          assistantMessage.content = '模型没有返回内容，请换个问题或切换模型再试一次。';
+          answer.textContent = assistantMessage.content;
         }
 
         saveHistoryItem({
@@ -787,41 +813,132 @@
           createdAt: new Date().toISOString()
         });
       } catch (error) {
+        assistantMessage.content = `调用失败：${error?.message || '请检查 Puter 授权和网络连接后重试。'}`;
         answer.classList.add('error');
-        answer.textContent = `调用 ${modelName} 失败：${error?.message || '请检查登录授权、网络连接或模型可用性后重试。'}`;
-        saveHistoryItem({
-          id: crypto.randomUUID(),
-          model,
-          modelName,
-          question,
-          answer: answer.textContent,
-          error: true,
-          createdAt: new Date().toISOString()
-        });
+        answer.textContent = assistantMessage.content;
       } finally {
+        saveCurrentConversation();
         setLoading(false);
         input.focus();
       }
     }
 
-    loginButton.addEventListener('click', async () => {
-      setLoading(true);
-      await ensureSignedIn();
-      setLoading(false);
+    function resultToImageUrl(result) {
+      if (!result) return '';
+      if (typeof result === 'string') return result;
+      if (result.src) return result.src;
+      if (result.url) return result.url;
+      if (result.data) return result.data;
+      if (Array.isArray(result)) return resultToImageUrl(result[0]);
+      if (result.image) return resultToImageUrl(result.image);
+      if (result.output) return resultToImageUrl(result.output);
+      return '';
+    }
+
+    function renderImageCard(record, prepend = false) {
+      const card = document.createElement('article');
+      card.className = 'image-card';
+      const description = document.createElement('p');
+      description.textContent = `${record.prompt}\n模型：${record.model}`;
+      card.appendChild(description);
+
+      if (record.url) {
+        const image = document.createElement('img');
+        image.alt = record.prompt;
+        image.src = record.url;
+        card.appendChild(image);
+
+        const link = document.createElement('a');
+        link.href = record.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '打开原图';
+        card.appendChild(link);
+      } else {
+        card.classList.add('message', 'error');
+        description.textContent += `\n${record.error || '未获取到图片地址。'}`;
+      }
+
+      if (prepend && imageResults.firstChild) {
+        imageResults.insertBefore(card, imageResults.firstChild);
+      } else {
+        imageResults.appendChild(card);
+      }
+      imageResults.scrollTop = 0;
+      return card;
+    }
+
+    function renderImages() {
+      imageResults.innerHTML = '';
+      if (!imageHistory.length) {
+        const card = document.createElement('article');
+        card.className = 'image-card';
+        card.innerHTML = '<p>输入画面描述并选择模型，即可生成图片。生成结果会保存在本地历史中。</p>';
+        imageResults.appendChild(card);
+        return;
+      }
+
+      imageHistory.forEach((record) => renderImageCard(record));
+    }
+
+    async function generateImage(prompt) {
+      const pending = renderImageCard({ prompt, model: imageModelSelect.value, url: '', error: '正在生成，请稍候…' }, true);
+      setImageLoading(true);
+
+      try {
+        const result = await puter.ai.txt2img(prompt, { model: imageModelSelect.value });
+        const url = resultToImageUrl(result);
+        const record = {
+          id: crypto.randomUUID(),
+          prompt,
+          model: imageModelSelect.value,
+          url,
+          createdAt: new Date().toISOString()
+        };
+
+        if (!url) {
+          record.error = '模型已返回结果，但页面无法识别图片地址。请尝试其它模型。';
+        }
+
+        pending.remove();
+        imageHistory = [record, ...imageHistory].slice(0, 20);
+        saveStorage(IMAGE_STORAGE_KEY, imageHistory);
+        renderImages();
+      } catch (error) {
+        pending.remove();
+        const record = {
+          id: crypto.randomUUID(),
+          prompt,
+          model: imageModelSelect.value,
+          url: '',
+          error: `生成失败：${error?.message || '请检查 Puter 授权、模型可用性和网络连接后重试。'}`,
+          createdAt: new Date().toISOString()
+        };
+        imageHistory = [record, ...imageHistory].slice(0, 20);
+        saveStorage(IMAGE_STORAGE_KEY, imageHistory);
+        renderImages();
+      } finally {
+        setImageLoading(false);
+        imagePrompt.focus();
+      }
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const activeTab = button.dataset.tab;
+        tabButtons.forEach((item) => {
+          const isActive = item.dataset.tab === activeTab;
+          item.classList.toggle('active', isActive);
+          item.setAttribute('aria-selected', String(isActive));
+        });
+        chatPanel.classList.toggle('active', activeTab === 'chat');
+        imagePanel.classList.toggle('active', activeTab === 'image');
+        chatControls.hidden = activeTab !== 'chat';
+        imageControls.hidden = activeTab !== 'image';
+        statusText.textContent = activeTab === 'chat' ? '默认 Grok，已开启上下文对话' : '选择模型，把提示词生成图片';
+        (activeTab === 'chat' ? input : imagePrompt).focus();
+      });
     });
-
-    clearHistoryButton.addEventListener('click', () => {
-      if (!readHistory().length) return;
-      const confirmed = confirm('确定要清除所有本地历史记录吗？此操作不可恢复。');
-      if (!confirmed) return;
-      localStorage.removeItem(HISTORY_KEY);
-      renderHistory();
-      appendMessage('system', '历史记录已清除。');
-    });
-
-    newChatButton.addEventListener('click', resetMessages);
-
-    modelSelect.addEventListener('change', updateModelLabel);
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -838,9 +955,45 @@
       }
     });
 
-    populateModelSelect();
+    imageForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const prompt = imagePrompt.value.trim();
+      if (!prompt) return;
+      imagePrompt.value = '';
+      generateImage(prompt);
+    });
+
+    imagePrompt.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        imageForm.requestSubmit();
+      }
+    });
+
+    newChatButton.addEventListener('click', newConversation);
+
+    clearHistoryButton.addEventListener('click', () => {
+      chatHistory = [];
+      conversation = [];
+      currentChatId = crypto.randomUUID();
+      saveStorage(CHAT_STORAGE_KEY, chatHistory);
+      renderConversation();
+      renderHistory();
+      input.focus();
+    });
+
+    clearImagesButton.addEventListener('click', () => {
+      imageHistory = [];
+      saveStorage(IMAGE_STORAGE_KEY, imageHistory);
+      renderImages();
+      imagePrompt.focus();
+    });
+
+    populateSelect(chatModelSelect, chatModels, DEFAULT_CHAT_MODEL);
+    populateSelect(imageModelSelect, imageModels, imageModels[0].id);
+    renderConversation();
     renderHistory();
-    refreshAuthStatus();
+    renderImages();
   </script>
 </body>
 </html>
